@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 import "./App.css";
 import "./bootstrap.min.css";
 
@@ -61,16 +62,30 @@ const Book = ({ title, clickHandler }) => {
   );
 };
 
-const Continue = () => {
-  return <div></div>;
+const Continue = ({ show, onContinue }) => {
+  return (
+    <div className="row continue">
+      {show ? (
+        <div className="col-11">
+          <button
+            className="btn btn-primary btn-lg float-right"
+            onClick={onContinue}
+          >
+            Continue
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
 };
 
-function AuthorQuiz({ turnData, highlight, clickHandler }) {
+function AuthorQuiz({ turnData, highlight, clickHandler, onContinue }) {
   return (
     <div className="container-fluid">
       <Hero />
       <Turn {...turnData} highlight={highlight} clickHandler={clickHandler} />
-      <Continue />
+      <Continue show={highlight === "correct"} onContinue={onContinue} />
+      <Link to="/add">Add an author</Link>
     </div>
   );
 }
