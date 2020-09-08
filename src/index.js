@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Route, withRouter } from "react-router-dom";
+import * as Redux from "redux";
+import * as ReactRedux from "react-redux";
 import { shuffle, sample } from "underscore";
 import "./index.css";
 import AuthorQuiz from "./AuthorQuiz";
@@ -62,56 +64,47 @@ const getTurnData = (authors) => {
   };
 };
 
-let state = resetState();
-
-const onAnswerClicked = (title) => {
-  state.highlight = state.turnData.author.books.some((b) => b === title)
-    ? "correct"
-    : "incorrect";
-
-  render();
+const defaultState = {
+  authors,
+  turnData: getTurnData(authors),
+  highlight: "",
 };
 
-function resetState() {
-  return {
-    turnData: getTurnData(authors),
-    highlight: "",
-  };
+function reducer(state = defaultState, action) {
+  switch (action.type) {
+    case "ANSWER_SELECTED":
+      const isCorrect = state.turnData.author.books.some(
+        (book) => book === action.answer
+      );
+      return Object.assign({}, state, {
+        highlight: isCorrect ? "correct" : "incorrect",
+      });
+
+    case "CONTINUE":
+      return Object.assign({}, state, {
+        highlight: "",
+        turnData: getTurnData(state.authors),
+      });
+
+    case "ADD_AUTHOR":
+      return Object.assign({}, state, {
+        authors: state.authors.concat([action.author]),
+      });
+
+    default:
+      return state;
+  }
 }
 
-function onContinue() {
-  state = resetState();
-  render();
-}
+let store = Redux.createStore(reducer);
 
-function App() {
-  return (
-    <AuthorQuiz
-      {...state}
-      clickHandler={onAnswerClicked}
-      onContinue={onContinue}
-    />
-  );
-}
-
-const AuthorWrapper = withRouter(({ history }) => (
-  <AddAuthorForm
-    onAddAuthor={(author) => {
-      authors.push(author);
-      history.push("/");
-    }}
-  />
-));
-
-function render() {
-  ReactDOM.render(
+ReactDOM.render(
+  <ReactRedux.Provider store={store}>
     <BrowserRouter>
-      <Route exact path="/" component={App} />
-      <Route path="/add" component={AuthorWrapper} />
-    </BrowserRouter>,
-    document.getElementById("root")
-  );
-}
-
-render();
+      <Route exact path="/" component={AuthorQuiz} />
+      <Route path="/add" component={AddAuthorForm} />
+    </BrowserRouter>
+  </ReactRedux.Provider>,
+  document.getElementById("root")
+);
 serviceWorker.register();
